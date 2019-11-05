@@ -1,0 +1,633 @@
+# this is dev and pcpm pipeline
+---
+source: &dev-source
+  cf_deploy_user: ((cf-preprd-username))
+  cf_deploy_password: ((cf-preprd-password))
+  cf_app_name: mobile-claim-jobs
+  file_prefix: 'mobile-jobs'
+  cf_space: 'development'
+  cf_env: 'dev'
+  instance_number: 1
+  memory: 512M
+  cf_api: https://api.system-dev.gp2.axadmin.net
+  aspnetcore_environment: Development
+  posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
+  cf_organization: mobile_backend
+  teams_url: ((teams-webhook-url))
+  newrelic_app_lic: ''
+
+source: &pcpm-source
+  cf_deploy_user: ((cf-preprd-username))
+  cf_deploy_password: ((cf-preprd-password))
+  artifactory-username: ((artifactory-username))
+  artifactory-password: ((artifactory-password))
+  cf_app_name: mobile-claims-pcpm-jobs
+  file_prefix: 'mobile-jobs'
+  cf_space: 'pcpm'
+  cf_env: 'dev'  
+  memory: 512M
+  cf_api: https://api.system-dev.gp2.axadmin.net
+  aspnetcore_environment: INT1
+  posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
+  cf_organization: mobile_backend
+  teams_url: ((teams-webhook-url))
+  newrelic_app_lic: ''
+
+resource_types:
+- name: artifactory
+  type: docker-image
+  source:
+    repository: pivotalservices/artifactory-resource
+    tag: latest
+
+- name: teams-notification
+  type: docker-image
+  source:
+    repository: navicore/teams-notification-resource
+    tag: latest
+
+- name: project-metrics
+  type: docker-image
+  source:
+    repository: ((internal-docker-addr))/gdc/concourse-projectmetrics-resource-net21
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    tag: latest
+
+- name: cf-resource
+  type: docker-image
+  source:
+    repository: ((internal-docker-addr))/gdc/cf-resource
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    tag: latest
+
+resources:
+
+- name: git-repo
+  type: git
+  source:
+    uri: ((bitbucket-uri))
+    branch: ((branch-name))
+    private_key: ((private-repo-key))
+
+- name: utility-dockerfile
+  type: git
+  source:
+    uri: ((bitbucket-uri))
+    branch: ((branch-name))
+    private_key: ((private-repo-key))
+    paths:
+      - ci/utility
+
+- name: dotnet-dockerfile
+  type: git
+  source:
+    uri: ((bitbucket-uri))
+    private_key: ((private-repo-key))
+    branch: ((branch-name))
+    paths:
+      - ci/dotnet
+
+- name: artifact
+  type: artifactory
+  source:
+    endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
+    repository: /mobile-backend/mobile-jobs
+    regex: "mobile-jobs-(?<version>.*).zip"
+    username: ((artifactory-username))
+    password: ((artifactory-password))
+    skip_ssl_verification: true
+
+- name: dotnet-image
+  type: docker-image
+  source:
+    repository: ((internal-docker-addr))/gdc/mobile-dotnet-image
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    tag: "latest"
+
+- name: utility-image
+  type: docker-image
+  source:
+    repository: ((internal-docker-addr))/gdc/mobile-utility-image
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    tag: "latest"
+
+- name: cf-pcpm
+  type: cf-resource
+  source:
+    api: ((cf-preprd-api))
+    username: ((cf-preprd-username))
+    password: ((cf-preprd-password))
+    organization: mobile_backend
+    space: pcpm
+    skip_cert_check: true
+
+- name: cf-dev
+  type: cf-resource
+  source:
+    api: ((cf-preprd-api))
+    username: ((cf-preprd-username))
+    password: ((cf-preprd-password))
+    organization: mobile_backend
+    space: development
+    skip_cert_check: true
+
+- name: teams-alert
+  type: teams-notification
+  source:
+    url: ((teams-webhook-url))
+
+- name: project-metrics
+  type: project-metrics
+  source:
+    jiraboard: Digital Garage
+    apiurl: https://projectmetrics-api-qa.apps-dev.gp2.axadmin.net
+    sonartoken: ((sonar-auth-token))
+    tribelead: Christopher Klingler
+
+- name: pcpm-schedule-for-deployment
+  type: time
+  source:
+    start: 3:00 AM
+    stop: 4:00 AM
+    location: America/Chicago
+
+jobs:
+
+- name: build-dotnet-image
+  plan:
+  - get: dotnet-dockerfile
+    trigger: true
+    version: latest
+  - put: dotnet-image
+    params:
+      build: dotnet-dockerfile/ci/dotnet
+
+- name: build-utility-image
+  plan:
+  - get: utility-dockerfile
+    trigger: true
+    version: latest
+  - put: utility-image
+    params:
+      build: utility-dockerfile/ci/utility
+
+- name: build-and-test-dev
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: dotnet-image
+    - get: utility-image
+    - get: git-repo     
+      trigger: true
+  - task: build-mobile-claim-jobs
+    image: dotnet-image
+    params:
+      <<: *dev-source
+    config:
+      platform: linux
+      inputs:
+      - name: git-repo
+      outputs:
+      - name: mobile-claim-jobs-binaries
+      run:
+        path: bash
+        args:
+        - -exc
+        - |
+          output_directory=${PWD}/mobile-claim-jobs-binaries
+          cd ./git-repo
+          dotnet publish ./MobileClaimJobs/MobileClaimJobs.csproj -c Release -o ${output_directory}/app
+          # format the version so that we can use lexicographic search to find the latest
+          version=$(git describe | awk -F- '{printf "%s-%04d-%s", $1, $2, $3}')
+          echo $version > ${output_directory}/version.txt
+          cp ./ci/pipelines/manifest.yml ${output_directory}/manifest.yml
+  - task: test-mobile-claim-jobs.tests
+    image: dotnet-image
+    config:
+      platform: linux
+      inputs:
+      - name: git-repo
+      run:
+        path: bash
+        dir: git-repo
+        args:
+        - -exc
+        - |
+          dotnet test ./MobileClaimJobs.Test/MobileClaimJobs.Test.csproj
+          dotnet test ./MobileClaimJobs.tests/MobileClaimJobs.tests.csproj
+  - task: publish-mobile-claim-jobs-dev
+    image: utility-image
+    config:
+      platform: linux
+      inputs:
+      - name: mobile-claim-jobs-binaries
+      outputs:
+      - name: artifact
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          cd ${PWD}/mobile-claim-jobs-binaries
+          version=$(cat ./version.txt)
+          filename=mobile-claim-jobs-${version}.zip
+          zip -r ${filename} ./*
+          mv ${filename} ../artifact/${filename}
+  - put: artifact
+    params:
+      file: artifact/mobile-claim-jobs-*.zip
+
+- name: code-analysis-dev
+  on_failure:
+      put: teams-alert
+      params:
+        title: |
+          $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+        text: Job $BUILD_JOB_NAME failed.
+        actionName: View Job $BUILD_JOB_NAME Results
+        actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: artifact
+    - get: git-repo
+      passed:
+        - build-and-test-dev
+      version: every
+      trigger: true
+  - task: execute-code-analysis
+    config:
+      platform: windows
+      inputs:
+      - name: git-repo
+      outputs:
+      - name: analysis-output
+      run:
+        path: powershell.exe
+        args:
+          - -File
+          - '.\git-repo\ci\scripts\code-analysis.ps1'      
+    params:
+      branch: ((branch-name))
+      project-name: MobileClaimsJobs
+      sonar-auth-token: ((sonar-auth-token))
+      sonar-url: ((sonar-url))
+  ensure:
+     put: project-metrics
+     params:
+       sourcedir: git-repo
+       outputdir: analysis-output
+       projectname: MobileClaimsJobs
+
+- name: deploy-green-dev
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image
+    - get: artifact
+      trigger: true
+      passed:
+       - code-analysis-dev
+  - task: prepare-manifest
+    image: utility-image
+    params:
+      <<: *dev-source
+    config:
+      platform: linux
+      inputs:
+      - name: artifact
+      outputs:
+      - name: deployables
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          output_directory=${PWD}/deployables
+          unzip ${PWD}/artifact/mobile-claims-jobs-*.zip -d ${output_directory}
+          manifest_file=${output_directory}/manifest.yml
+          sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
+          sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
+          sed -i -e "s/\[memory\]/${memory}/" ${manifest_file}
+          sed -i -e "s/\[newrelic_app_name\]/${cf_app_name}/" ${manifest_file}
+          sed -i -e "s/\[newrelic_app_lic\]/${newrelic_app_lic}/" ${manifest_file}
+          sed -i -e "s/\[app_name\]/${app_name}/" ${manifest_file}
+          sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
+          sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
+  - put: cf-dev
+    params:
+      manifest: deployables/manifest.yml
+      path: deployables/app
+
+- name: smoke-test-green-dev
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image
+    - get: cf-dev
+      trigger: true
+      passed:
+       - deploy-green-dev
+  - task: smoke-tests
+    image: utility-image
+    params:
+      <<: *dev-source
+    config:
+      platform: linux
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          cfpass=$(printenv cf_deploy_password)
+          cfuser=$(printenv cf_deploy_user)
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          set -x
+
+          app_url=$(cf app $cf_app_name-green | grep routes | sed -e 's/routes:\s*/https:\/\//')
+
+          healthcheck_status=$(curl -s -o /dev/null -w "%{http_code}" ${app_url}/api/mobilejobshealthcheck)
+          if [ "$healthcheck_status" != "200" ]; then
+            echo "App healthcheck did not respond with OK as expected"
+            exit 1
+          fi
+
+- name: blue-green-switch-dev
+  on_success:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME Dev deployed successfully - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME successful.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image    
+    - get: cf-dev
+      version: latest
+      passed:
+       - smoke-test-green-dev
+      trigger: true
+  - task: blue-to-green
+    image: utility-image    
+    params:
+      <<: *dev-source     
+    config:
+      platform: linux      
+      run:
+        path: bash
+        args:
+        - -exc
+        - |  
+          set +x
+          cfpass=$(printenv cf_deploy_password)
+          cfuser=$(printenv cf_deploy_user)
+
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          set -x
+
+          greenApps=$(cf apps | grep $cf_app_name-green | { grep -v grep || true; })
+          if [[ -z $greenApps ]]; then exit 0; fi
+
+          cf unbind-service $cf_app_name-green dgc-mq-green
+          cf unbind-service $cf_app_name dgc-mq
+          cf bind-service $cf_app_name-green dgc-mq
+
+          cf map-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name-green
+
+          cf stop $cf_app_name
+          cf delete $cf_app_name -f
+          # Remove the Green-Temp-Route.
+          cf delete-route apps-$cf_env.gp2.axadmin.net --hostname $cf_app_name-green -f
+
+          # Rename Green app to Blue app.
+          cf rename $cf_app_name-green $cf_app_name
+          cf restart $cf_app_name
+
+- name: regulator
+  plan:
+  - in_parallel:
+    - get: pcpm-schedule-for-deployment
+      trigger: true
+    - get: artifact
+      passed: 
+        - deploy-green-dev
+
+- name: deploy-green-pcpm
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME PCPM - $BUILD_JOB_NAME Failed - Branch: master
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image
+    - get: artifact
+      trigger: true
+      passed: 
+        - regulator
+  - task: prepare-manifest
+    image: utility-image
+    params:
+      <<: *pcpm-source
+    config:
+      platform: linux
+      inputs:
+      - name: artifact
+      outputs:
+      - name: deployables
+      run:
+        path: sh
+        args:
+        - -exc
+        - |
+          output_directory=${PWD}/deployables
+          unzip ${PWD}/artifact/mobile-claims-jobs-*.zip -d ${output_directory}
+          manifest_file=${output_directory}/manifest.yml
+          sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
+          sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
+          sed -i -e "s/\[memory\]/${memory}/" ${manifest_file}
+          sed -i -e "s/\[newrelic_app_name\]/${cf_app_name}/" ${manifest_file}
+          sed -i -e "s/\[newrelic_app_lic\]/${newrelic_app_lic}/" ${manifest_file}
+          sed -i -e "s/\[app_name\]/${app_name}/" ${manifest_file}
+          sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
+          sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
+  - put: cf-pcpm
+    params:
+      manifest: deployables/manifest.yml
+      path: deployables/app
+      params:
+      <<: *pcpm-source
+
+- name: smoke-test-green-pcpm
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image
+    - get: cf-pcpm
+      trigger: true
+      passed:
+       - deploy-green-pcpm
+  - task: smoke-tests
+    image: utility-image
+    params:
+      <<: *pcpm-source
+    config:
+      platform: linux
+      run:
+        path: sh
+        args:
+        - -ec
+        - |
+          cfpass=$(printenv cf_deploy_password)
+          cfuser=$(printenv cf_deploy_user)
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          set -x
+
+          app_url=$(cf app $cf_app_name-green | grep routes | sed -e 's/routes:\s*/https:\/\//')
+
+          healthcheck_status=$(curl -s -o /dev/null -w "%{http_code}" ${app_url}/api/mobilejobshealthcheck)
+          if [ "$healthcheck_status" != "200" ]; then
+            echo "App healthcheck did not respond with OK as expected"
+            exit 1
+          fi
+
+- name: blue-green-switch-pcpm
+  on_success:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME PCPM deployed successfully - Branch: master
+      text: Job $BUILD_JOB_NAME successful.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  on_failure:
+    put: teams-alert
+    params:
+      title: |
+        $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: master
+      text: Job $BUILD_JOB_NAME failed.
+      actionName: View Job $BUILD_JOB_NAME Results
+      actionTarget: https://concourse-dev.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+  plan:
+  - in_parallel:
+    - get: utility-image
+    - get: cf-pcpm
+      passed:
+       - smoke-test-green-pcpm
+      trigger: true
+  - task: blue-to-green
+    image: utility-image    
+    params:
+      <<: *pcpm-source 
+      artifactory_endpoint:  https://na-artifact-01.na.audatex.com:8443/artifactory
+      artifactory_username: ((artifactory-username))
+      artifactory_password: ((artifactory-password))       
+    config:
+      platform: linux      
+      run:
+        path: bash
+        args:
+        - -exc
+        - |  
+          set +x
+          cfpass=$(printenv cf_deploy_password)
+          cfuser=$(printenv cf_deploy_user)
+
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          set -x
+
+          greenApps=$(cf apps | grep $cf_app_name-green | { grep -v grep || true; })
+          if [[ -z $greenApps ]]; then exit 0; fi
+
+          cf unbind-service $cf_app_name-green dgc-mq-green
+          cf unbind-service $cf_app_name dgc-mq
+          cf bind-service $cf_app_name-green dgc-mq
+
+          cf map-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name-green
+
+          cf stop $cf_app_name
+          cf delete $cf_app_name -f
+          # Remove the Green-Temp-Route.
+          cf delete-route apps-$cf_env.gp2.axadmin.net --hostname $cf_app_name-green -f
+
+          # Rename Green app to Blue app.
+          cf rename $cf_app_name-green $cf_app_name
+          cf restart $cf_app_name  
+
+          # autoscaling
+          cf bind-service $cf_app_name autoscale
+          curl -O -k -u $artifactory_username:$artifactory_password $artifactory_endpoint/devops-local/cf-plugins/autoscaler-linux32-2.0.91
+          cf install-plugin autoscaler-linux32-2.0.91 -f
+          cf update-autoscaling-limits $cf_app_name 2 4
+          cf create-autoscaling-rule $cf_app_name cpu 25 75
+          cf enable-autoscaling $cf_app_name     
+
+groups:
+
+- name: mobile-claims-jobs
+  jobs:
+  - build-and-test-dev
+  - deploy-green-dev
+  - blue-green-switch-dev
+  - code-analysis-dev
+  - smoke-test-green-dev
+
+- name: mobile-claims-jobs-pcpm
+  jobs:  
+  - regulator
+  - deploy-green-pcpm
+  - smoke-test-green-pcpm
+  - blue-green-switch-pcpm
+
+- name: mbe-worker-images
+  jobs:
+  - build-dotnet-image
+  - build-utility-image

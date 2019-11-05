@@ -1,0 +1,16 @@
+---
+applications:
+- name: [application_name]
+  instances: [instances]
+  memory: [memory]
+  no-route: false
+  buildpacks:
+    - newrelic_dotnet_core_buildpack_latest
+    - dotnet_core_buildpack    
+  env:
+    NEW_RELIC_APP_NAME: [newrelic_app_name]
+    NEW_RELIC_LICENSE_KEY: [newrelic_app_lic]
+    ACCESS_TOKEN: [access_token]
+    ASPNETCORE_ENVIRONMENT: [aspnetcore_environment]
+    APP_NAME: [app_name]
+  services:
