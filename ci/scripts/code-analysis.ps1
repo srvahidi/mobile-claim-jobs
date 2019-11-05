@@ -34,11 +34,11 @@ try {
 
     $dotCoverExe = "JetBrains.dotCover.CommandLineTools.$dotCoverVersion\tools\dotCover.exe"
 
-    Write-Output "INFO: Running dotcover for MobileClaimsJobs.Test project."
-    Invoke-Expression "$dotCoverExe cover /TargetExecutable='$dotnetExe' /ReturnTargetExitCode /TargetArguments='test .\MobileClaimsJobs.Test\MobileClaimsJobs.Test.csproj' /Output=MobileClaimsJobs.Test.dcvr"
+    Write-Output "INFO: Running dotcover for MobileClaimJobs.Test project."
+    Invoke-Expression "$dotCoverExe cover /TargetExecutable='$dotnetExe' /ReturnTargetExitCode /TargetArguments='test .\MobileClaimJobs.Test\MobileClaimJobs.Test.csproj' /Output=MobileClaimJobs.Test.dcvr"
     $testsCode = $LASTEXITCODE
     if($testsCode -lt 0){
-        Write-Output "ERROR: MobileClaimsJobs.Test failed."
+        Write-Output "ERROR: MobileClaimJobs.Test failed."
         exit $testsCode
     }
 
@@ -50,7 +50,7 @@ try {
         exit $testsCode
     }
 
-	Invoke-Expression "$dotCoverExe merge /Source='MobileClaimsJobs.Test.dcvr' /Output=merge.dcvr"
+	Invoke-Expression "$dotCoverExe merge /Source='MobileClaimJobs.Test.dcvr' /Output=merge.dcvr"
     
     Write-Output "INFO: Converting coverage report to HTML format."
     Invoke-Expression "$dotCoverExe report /Source=merge.dcvr /Output=report.html /ReportType=HTML"
@@ -64,7 +64,7 @@ try {
     # Dependency Check
 	# This is a required step that will scan for OSS dependencies
 	Write-Output "Running Dependency-Check"
-	Invoke-Expression "dotnet publish MobileClaimsJobs.Test/MobileClaimsJobs.Test.csproj -c Release -o $symlink\publish"
+	Invoke-Expression "dotnet publish MobileClaimJobs.Test/MobileClaimJobs.Test.csproj -c Release -o $symlink\publish"
 	Invoke-Expression "dependency-check --project '$ProjectName' --scan $symlink\publish --format 'ALL'"
 	# NOTE: this needs to be the full path
 	$SonarOptions += "/d:sonar.dependencyCheck.reportPath=" + $($PWD.Path) + "'\dependency-check-report.xml' "
