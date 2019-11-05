@@ -94,7 +94,7 @@ resources:
   source:
     endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
     repository: /mobile-backend/mobile-jobs
-    regex: "mobile-jobs-(?<version>.*).zip"
+    regex: "mobile-claim-jobs-(?<version>.*).zip"
     username: ((artifactory-username))
     password: ((artifactory-password))
     skip_ssl_verification: true
