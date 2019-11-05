@@ -209,7 +209,8 @@ jobs:
           cd ./git-repo
           dotnet publish ./MobileClaimJobs/MobileClaimJobs.csproj -c Release -o ${output_directory}/app
           # format the version so that we can use lexicographic search to find the latest
-          version=$(git describe | awk -F- '{printf "%s-%04d-%s", $1, $2, $3}')
+          #version=$(git describe | awk -F- '{printf "%s-%04d-%s", $1, $2, $3}')
+          version="gahuJksl"
           echo $version > ${output_directory}/version.txt
           cp ./ci/pipelines/manifest.yml ${output_directory}/manifest.yml
   - task: test-mobile-claim-jobs.tests
@@ -224,8 +225,8 @@ jobs:
         args:
         - -exc
         - |
+          pwd
           dotnet test ./MobileClaimJobs.Test/MobileClaimJobs.Test.csproj
-          dotnet test ./MobileClaimJobs.tests/MobileClaimJobs.tests.csproj
   - task: publish-mobile-claim-jobs-dev
     image: utility-image
     config:
@@ -240,6 +241,7 @@ jobs:
         - -exc
         - |
           cd ${PWD}/mobile-claim-jobs-binaries
+          ls -ltr
           version=$(cat ./version.txt)
           filename=mobile-claim-jobs-${version}.zip
           zip -r ${filename} ./*
@@ -321,7 +323,7 @@ jobs:
         - -exc
         - |
           output_directory=${PWD}/deployables
-          unzip ${PWD}/artifact/mobile-claims-jobs-*.zip -d ${output_directory}
+          unzip ${PWD}/artifact/mobile-claim-jobs-*.zip -d ${output_directory}
           manifest_file=${output_directory}/manifest.yml
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
@@ -480,7 +482,7 @@ jobs:
         - -exc
         - |
           output_directory=${PWD}/deployables
-          unzip ${PWD}/artifact/mobile-claims-jobs-*.zip -d ${output_directory}
+          unzip ${PWD}/artifact/mobile-claim-jobs-*.zip -d ${output_directory}
           manifest_file=${output_directory}/manifest.yml
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
