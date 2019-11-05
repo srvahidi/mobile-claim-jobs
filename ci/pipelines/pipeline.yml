@@ -614,7 +614,7 @@ jobs:
 
 groups:
 
-- name: mobile-claims-jobs
+- name: mobile-claim-jobs
   jobs:
   - build-and-test-dev
   - deploy-green-dev
@@ -622,7 +622,7 @@ groups:
   - code-analysis-dev
   - smoke-test-green-dev
 
-- name: mobile-claims-jobs-pcpm
+- name: mobile-claim-jobs-pcpm
   jobs:  
   - regulator
   - deploy-green-pcpm
