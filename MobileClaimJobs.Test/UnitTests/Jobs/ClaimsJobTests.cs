@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace MobileClaimsJobs.Test.UnitTests.Jobs
+namespace MobileClaimJobs.Test.UnitTests.Jobs
 {
     public class ClaimsJobTests
     {

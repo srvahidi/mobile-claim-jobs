@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 
-namespace MobileClaimsJobs.Test
+namespace MobileClaimJobs.Test
 {
     public class UnitTest1
     {

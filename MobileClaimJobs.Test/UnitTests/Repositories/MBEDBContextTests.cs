@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 
-namespace MobileClaimsJobs.Test.UnitTests.Repositories
+namespace MobileClaimJobs.Test.UnitTests.Repositories
 {
     public class MBEDBContextTests : IDisposable
     {

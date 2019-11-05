@@ -1,7 +1,7 @@
 ﻿using AutoFixture;
 using MobileClaimJobs.Models;
 using MobileClaimJobs.Repositories;
-using MobileClaimsJobs.Test.TestUtilities;
+using MobileClaimJobs.Test.TestUtilities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using Xunit;
 
-namespace MobileClaimsJobs.Test.UnitTests.Repositories
+namespace MobileClaimJobs.Test.UnitTests.Repositories
 {
     public class MBERepositoryTests : IDisposable
     {

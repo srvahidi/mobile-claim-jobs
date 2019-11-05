@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MobileClaimsJobs.Test.TestUtilities
+namespace MobileClaimJobs.Test.TestUtilities
 {
     public static class ExtensionMethods
     {
