@@ -13,4 +13,3 @@ applications:
     ACCESS_TOKEN: [access_token]
     ASPNETCORE_ENVIRONMENT: [aspnetcore_environment]
     APP_NAME: [app_name]
-  services:
