@@ -427,10 +427,6 @@ jobs:
           greenApps=$(cf apps | grep $cf_app_name-green | { grep -v grep || true; })
           if [[ -z $greenApps ]]; then exit 0; fi
 
-          cf unbind-service $cf_app_name-green dgc-mq-green
-          cf unbind-service $cf_app_name dgc-mq
-          cf bind-service $cf_app_name-green dgc-mq
-
           cf map-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name
           cf unmap-route $cf_app_name apps-$cf_env.gp2.axadmin.net -n $cf_app_name
           cf unmap-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name-green
