@@ -8,6 +8,8 @@ source: &dev-source
   cf_space: 'development'
   cf_env: 'dev'
   instance_number: 1
+  app_name: 'MQ'
+  access_token: ''
   memory: 512M
   cf_api: https://api.system-dev.gp2.axadmin.net
   aspnetcore_environment: Development
@@ -26,6 +28,8 @@ source: &pcpm-source
   cf_space: 'pcpm'
   cf_env: 'dev'  
   memory: 512M
+  app_name: 'MQ'
+  access_token: ''
   cf_api: https://api.system-dev.gp2.axadmin.net
   aspnetcore_environment: INT1
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
