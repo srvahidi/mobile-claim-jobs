@@ -13,7 +13,7 @@ namespace MobileClaimJobs.Controllers
     {
         public ActionResult Working()
         {
-            return Ok();
+           return Ok();
         }
     }
 }
