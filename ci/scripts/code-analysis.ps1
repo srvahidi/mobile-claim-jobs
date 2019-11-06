@@ -59,8 +59,8 @@ try {
     Invoke-Expression "dotnet restore"
 
     Write-Output "INFO: Starting static code analysis."
-    #$version = git describe
-    $version = "gahuJksl"
+    $version = git describe
+    #$version = "gahuJksl"
     # Dependency Check
 	# This is a required step that will scan for OSS dependencies
 	Write-Output "Running Dependency-Check"
