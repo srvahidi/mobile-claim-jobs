@@ -6,6 +6,6 @@ applications:
   no-route: false
   buildpacks:
     - newrelic_dotnet_core_buildpack_latest
-    - dotnet_core_buildpack    
+    - dotnet_core_buildpack
   env:
     ASPNETCORE_ENVIRONMENT: [aspnetcore_environment]

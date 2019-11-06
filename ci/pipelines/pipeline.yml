@@ -327,16 +327,15 @@ jobs:
         - -exc
         - |
           output_directory=${PWD}/deployables
+          
           unzip ${PWD}/artifact/mobile-claim-jobs-*.zip -d ${output_directory}
           manifest_file=${output_directory}/manifest.yml
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
           sed -i -e "s/\[memory\]/${memory}/" ${manifest_file}
-          sed -i -e "s/\[newrelic_app_name\]/${cf_app_name}/" ${manifest_file}
-          sed -i -e "s/\[newrelic_app_lic\]/${newrelic_app_lic}/" ${manifest_file}
-          sed -i -e "s/\[app_name\]/${app_name}/" ${manifest_file}
           sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
           sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
+          cat ${output_directory}/manifest.yml
   - put: cf-dev
     params:
       manifest: deployables/manifest.yml
@@ -491,9 +490,6 @@ jobs:
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
           sed -i -e "s/\[memory\]/${memory}/" ${manifest_file}
-          sed -i -e "s/\[newrelic_app_name\]/${cf_app_name}/" ${manifest_file}
-          sed -i -e "s/\[newrelic_app_lic\]/${newrelic_app_lic}/" ${manifest_file}
-          sed -i -e "s/\[app_name\]/${app_name}/" ${manifest_file}
           sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
           sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
   - put: cf-pcpm
