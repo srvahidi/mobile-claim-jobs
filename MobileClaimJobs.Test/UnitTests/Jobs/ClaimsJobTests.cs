@@ -23,26 +23,32 @@ namespace MobileClaimJobs.Test.UnitTests.Jobs
         private Mock<IMBERepository> _mockMBERepository;
         private Mock<MBEDBContext> _mockMBEDBContext;
         private Fixture _fixture;
+        public ClaimsJobTests()
+        {
+            _fixture = new Fixture();
+            _mockMBERepository = new Mock<IMBERepository>();
+            _sut = new ClaimsJob(_mockMBERepository.Object);
+        }
         #endregion
-        //[Fact]
-        //public async void Execute_Should_RunSuccesfully()
-        //{
-        //    // Arrange
-        //    var mockJobExecutionContext = new Mock<IJobExecutionContext>();
-        //    var claims = _fixture.Build<Claim>()
-        //        .With(u => u.Id, new MongoDB.Bson.BsonObjectId(new ObjectId("bc299553e0fe4daa8de48d312a280e4e")))
-        //        .CreateMany<Claim>(new Random().Next(100));
-        //    _mockMBERepository.Setup(m => m.GetEligibleEstimateStatusClaims())
-        //        .ReturnsAsync(claims.ToList())
-        //        .Verifiable();
-        //    _mockMBERepository.Setup(m => m.UpdateClaimsStatuses(It.IsAny<List<Claim>>(), It.IsAny<int>()))
-        //        .Returns(Task.CompletedTask)
-        //        .Verifiable();
-        //    // Act
-        //    await _sut.Execute(mockJobExecutionContext.Object);
-        //    // Assert
-        //    _mockMBERepository.Verify();
-        //}
+        [Fact]
+        public async void Execute_Should_RunSuccesfully()
+        {
+            // Arrange
+            var mockJobExecutionContext = new Mock<IJobExecutionContext>();
+            var claims = _fixture.Build<Claim>()
+                .With(u => u.Id, new MongoDB.Bson.BsonObjectId(new ObjectId("bc299553e0fe4daa8de48d312a280e4e")))
+                .CreateMany<Claim>(new Random().Next(100));
+            _mockMBERepository.Setup(m => m.GetEligibleEstimateStatusClaims())
+                .ReturnsAsync(claims.ToList())
+                .Verifiable();
+            _mockMBERepository.Setup(m => m.UpdateClaimsStatuses(It.IsAny<List<Claim>>(), It.IsAny<int>()))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
+            // Act
+            await _sut.Execute(mockJobExecutionContext.Object);
+            // Assert
+            _mockMBERepository.Verify();
+        }
 
         //[Fact]
         //public async void Execute_Should_ThrowException_When_GadgetApiFails()
@@ -60,7 +66,7 @@ namespace MobileClaimJobs.Test.UnitTests.Jobs
         //        _sut.Execute(mockJobExecutionContext.Object)
         //    );
         //    // Assert
-        //    _mockMBERepository.Verify();
+        //    //_mockMBERepository.Verify();
         //    Assert.NotNull(result);
         //    Assert.NotEmpty(result.Message);
         //}

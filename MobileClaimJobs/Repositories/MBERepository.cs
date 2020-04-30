@@ -14,34 +14,31 @@ namespace MobileClaimJobs.Repositories
         #region Private members
         private readonly MBEDBContext _MBEDBContext;
         private readonly int EstimatePhotoStatus;
+        private readonly int RetrospectiveDays;
+        private readonly int HoursToWaitBeforeStatusUpdate;
+
+
         #endregion
 
         public MBERepository(MBEDBContext pMBEDBContext)
         {
             _MBEDBContext = pMBEDBContext;
             EstimatePhotoStatus = 12;
+            RetrospectiveDays = Int32.Parse(Environment.GetEnvironmentVariable("RETRO_DAYS"));
+            HoursToWaitBeforeStatusUpdate = Int32.Parse(Environment.GetEnvironmentVariable("HOURS_TO_WAIT_BEFORE_UPDATE"));
         }
 
         public async Task<List<Claim>> GetEligibleEstimateStatusClaims()
         {
-            try
-            {
-                //DateTime endDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-                DateTime endDate = DateTime.Now;
+            DateTime endDate = DateTime.Now;
 
-                DateTime startDate = endDate.AddDays(-7);
+            DateTime startDate = endDate.AddDays(-RetrospectiveDays);
+            IMongoCollection<Claim> claimsCollection = _MBEDBContext.GetClaims<Claim>();
+            var filter = Builders<Claim>.Filter.Where(itm => itm.createdDate <= endDate && itm.createdDate >= startDate && itm.customerStatus == EstimatePhotoStatus && itm.updatedDate < DateTime.Now.AddHours(-HoursToWaitBeforeStatusUpdate));
 
-                IMongoCollection<Claim> claimsCollection = _MBEDBContext.GetClaims<Claim>();
-                var filter = Builders<Claim>.Filter.Where(itm => itm.createdDate <= endDate && itm.createdDate >= startDate && itm.customerStatus == EstimatePhotoStatus && itm.updatedDate < DateTime.Now.AddHours(-6));
-                List<Claim> selectedClaims = await claimsCollection.Find(filter).ToListAsync<Claim>();
-                Console.WriteLine("Fetched the ClaimsList");
-                return selectedClaims;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"The message is {ex.Message}");
-                return null;
-            }
+            List<Claim> selectedClaims = await claimsCollection.Find(filter).ToListAsync<Claim>();
+            Console.WriteLine("Fetched the ClaimsList");
+            return selectedClaims;
         }
 
         public async Task UpdateClaimsStatuses(List<Claim> matchedClaims, int targetStatus)
@@ -50,12 +47,12 @@ namespace MobileClaimJobs.Repositories
             {
                 IMongoCollection<Claim> claimsCollection = _MBEDBContext.GetClaims<Claim>();
                 var filter = Builders<Claim>.Filter.Where(itm => itm.Id == claim.Id);
-                var updateSet = Builders<Claim>.Update.Set("customerStatus", targetStatus);
-                var updoneresult = await claimsCollection.UpdateOneAsync(filter, updateSet);
+                var updateSet = Builders<Claim>.Update.Set("customerStatus", targetStatus).Set("updatedDate", DateTime.Now);
+                var updateResult = await claimsCollection.UpdateOneAsync(filter, updateSet);
+                Console.WriteLine($"Status updated for claim # : {claim.claimNumber}");
             }
             return;
         }
-
     }
 }
 

@@ -14,8 +14,15 @@ namespace MobileClaimJobs
     {
         public static void Main(string[] args)
         {
-            JobsInit.InitiateJobs().GetAwaiter().GetResult();
-            CreateWebHostBuilder(args).Build().Run();
+            try
+            {
+                JobsInit.InitiateJobs().GetAwaiter().GetResult();
+                CreateWebHostBuilder(args).Build().Run();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"Exception occurred in Main function with the error message : {ex.Message}");
+            }
             
         }
 

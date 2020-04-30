@@ -19,9 +19,24 @@ namespace MobileClaimJobs.ScheduledJobs
         }
         public async Task Execute(IJobExecutionContext context)
         {
-            Console.WriteLine("The job has been executed!");
-            List<Claim> matchedClaims = await _MBERepository.GetEligibleEstimateStatusClaims();
-            await _MBERepository.UpdateClaimsStatuses(matchedClaims, ClaimSubmissionStatus);
+            try
+            {
+                Console.WriteLine("The job execution started!");
+                List<Claim> matchedClaims = await _MBERepository.GetEligibleEstimateStatusClaims();
+                if (matchedClaims != null)
+                {
+                    await _MBERepository.UpdateClaimsStatuses(matchedClaims, ClaimSubmissionStatus);
+                    Console.WriteLine($"Updated status to 5 for {matchedClaims.Count} claim(s)");
+                }
+                else
+                {
+                    Console.WriteLine("No claims exist with customer status 12 or not eligible for the customer status update");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"The job execution error message is {ex.Message}");
+            }
             return;
         }
     }

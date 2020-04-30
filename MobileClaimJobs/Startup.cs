@@ -22,9 +22,6 @@ namespace MobileClaimJobs
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            //services.AddCloudFoundryActuators(Configuration);
-            //services.AddSingleton<IMBERepository, MBERepository>();
-            //services.AddScoped<MBEDBContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,7 +38,6 @@ namespace MobileClaimJobs
 
             app.UseHttpsRedirection();
             app.UseMvc();
-            //app.UseCloudFoundryActuators();
         }
     }
 }

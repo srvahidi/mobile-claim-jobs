@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MobileClaimJobs.Models
 {
+    [BsonIgnoreExtraElements]
     public class Claim
     {
         [Display(Name = "id")]
@@ -388,6 +390,5 @@ namespace MobileClaimJobs.Models
         /// </summary>
         /// <value><c>true</c> if vin decode failed; otherwise, <c>false</c>.</value>
         public bool vinDecodeFailed { get; set; }
-
     }
 }

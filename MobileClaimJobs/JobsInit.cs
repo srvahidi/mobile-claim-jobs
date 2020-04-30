@@ -38,7 +38,7 @@ namespace MobileClaimJobs
                 .WithIdentity("Claims", "Processing")
                 .StartNow()
                 .WithSimpleSchedule(x => x
-                    .WithIntervalInSeconds(25)
+                    .WithIntervalInSeconds(Int32.Parse(Environment.GetEnvironmentVariable("JOB_RUN_FREQUENCY")))
                     .RepeatForever())
                 .Build();
 
