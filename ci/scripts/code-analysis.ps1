@@ -42,10 +42,10 @@ try {
     }
 
 	Write-Output "INFO: Running dotcover for unit tests project."
-    Invoke-Expression "$dotCoverExe cover /TargetExecutable='$dotnetExe' /ReturnTargetExitCode /TargetArguments='test .\MBEWrapperAPI.tests\MBEWrapperAPI.tests.csproj' /Output=MBEWrapperAPI.tests.dcvr"
+    Invoke-Expression "$dotCoverExe cover /TargetExecutable='$dotnetExe' /ReturnTargetExitCode /TargetArguments='test .\MobileClaimJobs.Test\MobileClaimJobs.Test.csproj' /Output=MobileClaimJobs.Test.dcvr"
     $testsCode = $LASTEXITCODE
     if($testsCode -lt 0){
-        Write-Output "ERROR: MBEWrapperAPI.tests failed."
+        Write-Output "ERROR: MobileClaimJobs.Tests failed."
         exit $testsCode
     }
 
