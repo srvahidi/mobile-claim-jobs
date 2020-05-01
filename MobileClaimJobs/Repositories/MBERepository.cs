@@ -49,7 +49,7 @@ namespace MobileClaimJobs.Repositories
                 var filter = Builders<Claim>.Filter.Where(itm => itm.Id == claim.Id);
                 var updateSet = Builders<Claim>.Update.Set("customerStatus", targetStatus).Set("updatedDate", DateTime.Now);
                 var updateResult = await claimsCollection.UpdateOneAsync(filter, updateSet);
-                Console.WriteLine($"Status updated for claim # : {claim.claimNumber}");
+                Console.WriteLine($"Status updated for the claim # : {claim.claimNumber}");
             }
             return;
         }
