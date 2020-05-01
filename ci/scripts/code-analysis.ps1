@@ -1,8 +1,7 @@
 # import the utility Module
 import-module BuildUtils -force
 
-
-$dotCoverVersion = "2018.1.0"
+$dotCoverVersion = "2019.3.2"
 $dotnetExe = (Get-Command dotnet).Path
 $env:ASPNETCORE_ENVIRONMENT = 'Test'
 $vcap = Get-Content '.\ci\win-env.json'
