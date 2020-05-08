@@ -58,7 +58,7 @@ namespace MobileClaimJobs.Repositories
             {
                 string claimPutUrl = MBEWrapperUrl + "api/claim/" + claim.Id + "/update?apiKey=" + apiKey;
 
-                Console.WriteLine($":UPDATE CLAIM : Update claim request sent to MBE using URL  : [ {claimPutUrl} ]");
+                Console.WriteLine($":UPDATE CLAIM : Update claim request sent to MBE using URL   : [ {claimPutUrl} ]");
                 ClaimUpdateData updateData = new ClaimUpdateData
                 {
                     CustomerStatus = targetStatus
