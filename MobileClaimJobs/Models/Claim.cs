@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace MobileClaimJobs.Models
 {
     [BsonIgnoreExtraElements]
-    public class Claim
+    public class Claims
     {
         [Display(Name = "id")]
         [BsonElement("_id", Order = 1)]

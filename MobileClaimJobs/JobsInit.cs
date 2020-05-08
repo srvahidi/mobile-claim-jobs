@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MobileClaimJobs.Interfaces;
+using MobileClaimJobs.Outside;
+using MobileClaimJobs.Persistence;
 using MobileClaimJobs.Repositories;
 using MobileClaimJobs.ScheduledJobs;
 using Quartz;
@@ -20,6 +22,9 @@ namespace MobileClaimJobs
             services.AddScoped<ClaimsJob>();
             services.AddScoped<MBEDBContext>();
             services.AddScoped<IMBERepository, MBERepository>();
+            services.AddScoped<IMongoConnection, MongoConnection>();
+            services.AddHttpClient<IHttpPort, HttpAdapter>();
+
             var serviceProvider = services.BuildServiceProvider();
 
             var props = new NameValueCollection

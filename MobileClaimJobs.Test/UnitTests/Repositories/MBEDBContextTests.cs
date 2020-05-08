@@ -34,7 +34,7 @@ namespace MobileClaimJobs.Test.UnitTests.Repositories
             // Arrange
             // Act
             var result1 = _sut.GetClaims<BsonDocument>();
-            var result2 = _sut.GetClaims<Claim>();
+            var result2 = _sut.GetClaims<Claims>();
             // Assert
             Assert.NotNull(result1);
             Assert.NotNull(result2);

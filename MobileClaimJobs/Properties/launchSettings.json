@@ -15,8 +15,8 @@
       "environmentVariables": {
         "HOURS_TO_WAIT_BEFORE_UPDATE": "6",
         "MBE_DB_NAME": "mbe",
-        "MBE_DB_URL": "mongodb://mbeuser:password@10.66.49.126:27017/?authSource=mbe",
-        "ASPNETCORE_ENVIRONMENT": "int1",
+        "MBE_DB_URL": "mongodb://mbeuser:password@devmongodb.axusprvt.net:27017/?authSource=mbe",
+        "ASPNETCORE_ENVIRONMENT": "Development",
         "RETRO_DAYS": "10",
         "JOB_RUN_FREQUENCY": "60"
       }

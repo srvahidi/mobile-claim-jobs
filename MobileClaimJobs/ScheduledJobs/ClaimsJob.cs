@@ -22,8 +22,8 @@ namespace MobileClaimJobs.ScheduledJobs
             try
             {
                 Console.WriteLine("The job execution started!");
-                List<Claim> matchedClaims = await _MBERepository.GetEligibleEstimateStatusClaims();
-                if (matchedClaims != null)
+                List<Claims> matchedClaims = await _MBERepository.GetEligibleEstimateStatusClaims();
+                if (matchedClaims != null && matchedClaims.Count != 0)
                 {
                     await _MBERepository.UpdateClaimsStatuses(matchedClaims, ClaimSubmissionStatus);
                     Console.WriteLine($"Updated status to 5 for {matchedClaims.Count} claim(s)");

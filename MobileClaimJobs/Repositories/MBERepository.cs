@@ -1,10 +1,14 @@
 ﻿using MobileClaimJobs.Interfaces;
 using MobileClaimJobs.Models;
+using MobileClaimJobs.Persistence;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MobileClaimJobs.Repositories
@@ -16,40 +20,54 @@ namespace MobileClaimJobs.Repositories
         private readonly int EstimatePhotoStatus;
         private readonly int RetrospectiveDays;
         private readonly int HoursToWaitBeforeStatusUpdate;
-
+        private readonly IMongoConnection _mongoConnection;
+        private readonly IHttpPort _httpPort;
 
         #endregion
 
-        public MBERepository(MBEDBContext pMBEDBContext)
+        public MBERepository(MBEDBContext pMBEDBContext, IMongoConnection mongoConnection, IHttpPort httpPort)
         {
             _MBEDBContext = pMBEDBContext;
             EstimatePhotoStatus = 12;
+            _mongoConnection = mongoConnection;
+            _httpPort = httpPort;
             RetrospectiveDays = Int32.Parse(Environment.GetEnvironmentVariable("RETRO_DAYS"));
             HoursToWaitBeforeStatusUpdate = Int32.Parse(Environment.GetEnvironmentVariable("HOURS_TO_WAIT_BEFORE_UPDATE"));
         }
 
-        public async Task<List<Claim>> GetEligibleEstimateStatusClaims()
+        public async Task<List<Claims>> GetEligibleEstimateStatusClaims()
         {
             DateTime endDate = DateTime.Now;
 
             DateTime startDate = endDate.AddDays(-RetrospectiveDays);
-            IMongoCollection<Claim> claimsCollection = _MBEDBContext.GetClaims<Claim>();
-            var filter = Builders<Claim>.Filter.Where(itm => itm.createdDate <= endDate && itm.createdDate >= startDate && itm.customerStatus == EstimatePhotoStatus && itm.updatedDate < DateTime.Now.AddHours(-HoursToWaitBeforeStatusUpdate));
 
-            List<Claim> selectedClaims = await claimsCollection.Find(filter).ToListAsync<Claim>();
+            IMongoCollection<Claims> claimsCollection = _mongoConnection.GetCollection<Claims>();
+            var filter = Builders<Claims>.Filter.Where(itm => itm.createdDate <= endDate && itm.createdDate >= startDate && itm.customerStatus == EstimatePhotoStatus && itm.updatedDate < DateTime.Now.AddHours(-HoursToWaitBeforeStatusUpdate));
+
+            List<Claims> selectedClaims = await claimsCollection.Find(filter).ToListAsync<Claims>();
             Console.WriteLine("Fetched the ClaimsList");
             return selectedClaims;
         }
 
-        public async Task UpdateClaimsStatuses(List<Claim> matchedClaims, int targetStatus)
+        public async Task UpdateClaimsStatuses(List<Claims> matchedClaims, int targetStatus)
         {
-            foreach (Claim claim in matchedClaims)
+            string MBEWrapperUrl = Environment.GetEnvironmentVariable("MBE_WRAPPER_URL");
+            string apiKey = Environment.GetEnvironmentVariable("MBE_WRAPPER_API_KEY");
+
+            foreach (Claims claim in matchedClaims)
             {
-                IMongoCollection<Claim> claimsCollection = _MBEDBContext.GetClaims<Claim>();
-                var filter = Builders<Claim>.Filter.Where(itm => itm.Id == claim.Id);
-                var updateSet = Builders<Claim>.Update.Set("customerStatus", targetStatus).Set("updatedDate", DateTime.Now);
-                var updateResult = await claimsCollection.UpdateOneAsync(filter, updateSet);
-                Console.WriteLine($"Status updated for the claim # : {claim.claimNumber}");
+                string claimPutUrl = MBEWrapperUrl + "api/claim/" + claim.Id + "/update?apiKey=" + apiKey;
+
+                Console.WriteLine($":UPDATE CLAIM : Update claim request sent to MBE using URL  : [ {claimPutUrl} ]");
+                ClaimUpdateData updateData = new ClaimUpdateData
+                {
+                    CustomerStatus = targetStatus
+                };
+
+                string jsonData = JsonConvert.SerializeObject(updateData);
+                var jsonContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage claimPutResponse = await _httpPort.PutAsync(new Uri(claimPutUrl), jsonContent);
             }
             return;
         }

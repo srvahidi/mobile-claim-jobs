@@ -14,12 +14,12 @@ namespace MobileClaimJobs.Interfaces
         /// <param name="matchedClaims"></param>
         /// <param name="estimatePhotoStatus"></param>
         /// <returns></returns>
-        Task UpdateClaimsStatuses(List<Claim> matchedClaims, int estimatePhotoStatus);
+        Task UpdateClaimsStatuses(List<Claims> matchedClaims, int estimatePhotoStatus);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        Task<List<Claim>> GetEligibleEstimateStatusClaims();
+        Task<List<Claims>> GetEligibleEstimateStatusClaims();
     }
 }

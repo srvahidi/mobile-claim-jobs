@@ -19,15 +19,23 @@ namespace MobileClaimJobs
                 JobsInit.InitiateJobs().GetAwaiter().GetResult();
                 CreateWebHostBuilder(args).Build().Run();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Exception occurred in Main function with the error message : {ex.Message}");
             }
-            
+
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, builder) =>
+                {
+                    builder.AddEnvironmentVariables();
+                    if (context.HostingEnvironment.IsDevelopment())
+                    {
+                        builder.AddUserSecrets("MobileClaimJobs");
+                    }
+                })
                 .UseStartup<Startup>();
     }
 }

@@ -1,9 +1,11 @@
 ﻿using AutoFixture;
 using MobileClaimJobs.Interfaces;
 using MobileClaimJobs.Models;
+using MobileClaimJobs.Persistence;
 using MobileClaimJobs.Repositories;
 using MobileClaimJobs.ScheduledJobs;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using Moq;
 using Newtonsoft.Json.Bson;
 using Quartz;
@@ -35,13 +37,13 @@ namespace MobileClaimJobs.Test.UnitTests.Jobs
         {
             // Arrange
             var mockJobExecutionContext = new Mock<IJobExecutionContext>();
-            var claims = _fixture.Build<Claim>()
+            var claims = _fixture.Build<Claims>()
                 .With(u => u.Id, new MongoDB.Bson.BsonObjectId(new ObjectId("bc299553e0fe4daa8de48d312a280e4e")))
-                .CreateMany<Claim>(new Random().Next(100));
+                .CreateMany<Claims>(new Random().Next(100));
             _mockMBERepository.Setup(m => m.GetEligibleEstimateStatusClaims())
                 .ReturnsAsync(claims.ToList())
                 .Verifiable();
-            _mockMBERepository.Setup(m => m.UpdateClaimsStatuses(It.IsAny<List<Claim>>(), It.IsAny<int>()))
+            _mockMBERepository.Setup(m => m.UpdateClaimsStatuses(It.IsAny<List<Claims>>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask)
                 .Verifiable();
             // Act
@@ -49,26 +51,5 @@ namespace MobileClaimJobs.Test.UnitTests.Jobs
             // Assert
             _mockMBERepository.Verify();
         }
-
-        //[Fact]
-        //public async void Execute_Should_ThrowException_When_GadgetApiFails()
-        //{
-        //    // Arrange
-        //    var mockJobExecutionContext = new Mock<IJobExecutionContext>();
-        //    var claims = _fixture.Build<Claim>()
-        //        .With(u => u.Id, new MongoDB.Bson.BsonObjectId(new ObjectId("bc299553e0fe4daa8de48d312a280e4e")))
-        //        .CreateMany<Claim>(new Random().Next(100));
-        //    _mockMBERepository.Setup(m => m.GetEligibleEstimateStatusClaims())
-        //        .ReturnsAsync(claims.ToList())
-        //        .Verifiable();
-        //    // Act
-        //    var result = await Assert.ThrowsAsync<Exception>(() =>
-        //        _sut.Execute(mockJobExecutionContext.Object)
-        //    );
-        //    // Assert
-        //    //_mockMBERepository.Verify();
-        //    Assert.NotNull(result);
-        //    Assert.NotEmpty(result.Message);
-        //}
     }
 }

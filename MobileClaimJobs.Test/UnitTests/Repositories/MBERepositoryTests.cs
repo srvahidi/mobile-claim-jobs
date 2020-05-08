@@ -19,7 +19,7 @@ namespace MobileClaimJobs.Test.UnitTests.Repositories
         #region Private members
         private MBERepository _sut;
         private Mock<MBEDBContext> _mockMBEDBContext;
-        private Mock<IMongoCollection<Claim>> _mockMongoCollection;
+        private Mock<IMongoCollection<Claims>> _mockMongoCollection;
         private const string MBE_DB_URL = "mongodb://mongo-url/mbedb";
         private const string MBE_DB_NAME = "mbe";
         private Fixture _fixture;
@@ -31,10 +31,10 @@ namespace MobileClaimJobs.Test.UnitTests.Repositories
             Environment.SetEnvironmentVariable("MBE_DB_URL", MBE_DB_URL);
             Environment.SetEnvironmentVariable("MBE_DB_NAME", MBE_DB_NAME);
             _mockMBEDBContext = new Mock<MBEDBContext>();
-            _mockMongoCollection = new Mock<IMongoCollection<Claim>>();
-            _mockMBEDBContext.Setup(m => m.GetClaims<Claim>())
+            _mockMongoCollection = new Mock<IMongoCollection<Claims>>();
+            _mockMBEDBContext.Setup(m => m.GetClaims<Claims>())
                 .Returns(_mockMongoCollection.Object).Verifiable();
-            _sut = new MBERepository(_mockMBEDBContext.Object);
+            _sut = new MBERepository(_mockMBEDBContext.Object,null,null);
         }
 
         #region StoreValuation
@@ -140,14 +140,14 @@ namespace MobileClaimJobs.Test.UnitTests.Repositories
         #endregion
 
         #region Data Builders
-        private static Claim CreateClaim(Claim claim)
+        private static Claims CreateClaim(Claims claim)
         {
             var fixture = new Fixture();
             var result = claim.DeepClone();
             result.claimNumber = "sdfg";
             return result;
         }
-        private static Claim CreateDbClaim(Claim valuation)
+        private static Claims CreateDbClaim(Claims valuation)
         {
             var fixture = new Fixture();
             var result = valuation.DeepClone();
