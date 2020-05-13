@@ -35,7 +35,7 @@ namespace MobileClaimJobs.ScheduledJobs
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"The job execution error message is {ex.Message}");
+                Console.WriteLine($"The job execution error message : {ex.Message}");
             }
             return;
         }
