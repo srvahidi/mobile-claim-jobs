@@ -17,13 +17,13 @@ source: &dev-source
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
   newrelic_app_lic: ''
-  hours_to_wait_before_update:'1'
-  job_run_frequency:'60'
-  mbe_db_name:'mbe'
-  mbe_db_url:'mongodb://mbeuser:password@devmongodb.axusprvt.net:27017/?authSource=mbe'
-  mbe_wrapper_api_key:'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
-  mbe_wrapper_url:'https://kong-dev.gp2.axadmin.net/mbe-wrapper-dev/'
-  retro_days:'10'
+  hours_to_wait_before_update: '1'
+  job_run_frequency: '60'
+  mbe_db_name: 'mbe'
+  mbe_db_url: 'mongodb://mbeuser:password@devmongodb.axusprvt.net:27017/?authSource=mbe'
+  mbe_wrapper_api_key: 'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
+  mbe_wrapper_url: 'https://kong-dev.gp2.axadmin.net/mbe-wrapper-dev/'
+  retro_days: '10'
 
 source: &pcpm-source
   cf_deploy_user: ((cf-preprd-username))
@@ -43,13 +43,13 @@ source: &pcpm-source
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
   newrelic_app_lic: ''
-  hours_to_wait_before_update:'1'
-  job_run_frequency:'60'
-  mbe_db_name:'mbe'
-  mbe_db_url:'mongodb://mbeuser:password@pm-mondb-pri.axusprvt.net:27017/?authSource=mbe'
-  mbe_wrapper_api_key:'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
-  mbe_wrapper_url:'https://kong-dev.gp2.axadmin.net/mbe-wrapper-pcpm/'
-  retro_days:'10'
+  hours_to_wait_before_update: '1'
+  job_run_frequency: '60'
+  mbe_db_name: 'mbe'
+  mbe_db_url: 'mongodb://mbeuser:password@pm-mondb-pri.axusprvt.net:27017/?authSource=mbe'
+  mbe_wrapper_api_key: 'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
+  mbe_wrapper_url: 'https://kong-dev.gp2.axadmin.net/mbe-wrapper-pcpm/'
+  retro_days: '10'
 
 resource_types:
 - name: artifactory
