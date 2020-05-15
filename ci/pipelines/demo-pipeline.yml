@@ -7,7 +7,7 @@ source: &demo-source
   cf_app_name: mobile-claims-jobs-demo
   cf_space: 'demo'
   cf_env: 'prod'
-  instance_number: 2
+  instance_number: 1
   memory: 1G
   cf_api: https://api.system-prod.gp2.axadmin.net
   aspnetcore_environment: CAE
@@ -60,10 +60,10 @@ resources:
     git_config:
       branch: master
       private_key: ((private-repo-key))
-      uri: git@bitbucket.org:SoleraNA/mobileclaimjobs.git
+      uri: git@bitbucket.org:SoleraNA/mobile-claim-jobs.git
     recon_config:
-      projectId: ECHO3
-      repoPath: SoleraNA/mobileclaimjobs
+      projectId: A2E
+      repoPath: SoleraNA/mobile-claim-jobs
       url: https://recon.apps-prod.gp2.axadmin.net/api/recommendation
     time_config:
       location: America/Chicago
