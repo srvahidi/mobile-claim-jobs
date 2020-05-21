@@ -44,7 +44,7 @@ namespace MobileClaimJobs.Repositories
             IMongoCollection<Claims> claimsCollection = _mongoConnection.GetCollection<Claims>();
             var filter = Builders<Claims>.Filter.Where(itm => itm.createdDate <= endDate && itm.createdDate >= startDate && itm.customerStatus == EstimatePhotoStatus && itm.updatedDate < DateTime.Now.AddHours(-HoursToWaitBeforeStatusUpdate));
 
-            List<Claims> selectedClaims = await claimsCollection.Find(filter).ToListAsync<Claims>();
+            List<Claims> selectedClaims = await claimsCollection.Find(filter).Limit(Int32.Parse(Environment.GetEnvironmentVariable("NUMBER_OF_RECORDS_TO_FETCH"))).ToListAsync<Claims>();
             Console.WriteLine("Fetched the ClaimsList");
             return selectedClaims;
         }
