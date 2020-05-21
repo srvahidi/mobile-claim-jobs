@@ -64,10 +64,10 @@ resources:
     git_config:
       branch: master
       private_key: ((private-repo-key))
-      uri: git@bitbucket.org:SoleraNA/mobileclaimjobs.git
+      uri: git@bitbucket.org:SoleraNA/mobile-claim-jobs.git
     recon_config:
-      projectId: ECHO3
-      repoPath: SoleraNA/mobileclaimjobs
+      projectId: A2E
+      repoPath: SoleraNA/mobile-claim-jobs
       url: https://recon.apps-prod.gp2.axadmin.net/api/recommendation
     time_config:
       location: America/Chicago
