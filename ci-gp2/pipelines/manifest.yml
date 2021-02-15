@@ -1,0 +1,18 @@
+---
+applications:
+- name: [application_name]
+  instances: [instances]
+  memory: [memory]
+  no-route: false
+  buildpacks:
+    - newrelic_dotnet_core_buildpack_latest
+    - dotnet_core_buildpack
+  env:
+    ASPNETCORE_ENVIRONMENT: [aspnetcore_environment]
+    HOURS_TO_WAIT_BEFORE_UPDATE: '1'
+    JOB_RUN_FREQUENCY: '60'
+    MBE_DB_NAME: 'mbe'
+    MBE_DB_URL: 'mongodb://mbeuser:password@devmongodb.axusprvt.net:27017/?authSource=mbe'
+    MBE_WRAPPER_API_KEY: 'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
+    MBE_WRAPPER_URL: 'https://kong-dev.gp2.axadmin.net/mbe-wrapper-dev/'
+    RETRO_DAYS: '10'
