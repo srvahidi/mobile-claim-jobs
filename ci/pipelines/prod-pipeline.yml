@@ -10,12 +10,12 @@ source: &prod-source
   cf_env: 'prod'
   instance_number: 2
   memory: 1G
-  cf_api: https://api.system-prod.gp2.axadmin.net
+  cf_api: https://api.system-prod.usdc10.axadmin.net
   aspnetcore_environment: Production
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
-  newrelic_app_lic: ((new-relic-license-key))
+  newrelic_app_lic: ((newrelic-license-key))
   buildpack_one: '- newrelic_dotnet_core_buildpack_latest'
   buildpack_two: '- dotnet_core_buildpack'
 
@@ -30,25 +30,25 @@ resource_types:
 - name: recon
   type: docker-image
   source:
-    username: ((internal-docker-user))
-    password: ((internal-docker-pass))
-    repository: ((internal-docker-addr))/gdc/recon_resource
+    username: ((proget-user))
+    password: ((proget-password))
+    repository: ((proget-url))/docker/gdc/recon_resource
 
 - name: cf2
   type: docker-image
   source:
-    username: ((internal-docker-user))
-    password: ((internal-docker-pass))
-    repository: ((internal-docker-addr))/gdc/cf-resource
+    username: ((proget-user))
+    password: ((proget-password))
+    repository: ((proget-url))/docker/gdc/cf-resource
 
 resources:    
 
 - name: utility-image
   type: docker-image
   source:
-    repository: ((internal-docker-addr))/gdc/mobile-jobs-utility-image
-    username: ((internal-docker-user))
-    password: ((internal-docker-pass))
+    repository: ((proget-url))/docker/rms/claimsmanagement/dgclaims/mobile-claim-jobs/mobile-utility
+    username: ((proget-user))
+    password: ((proget-password))
     tag: "latest"
 
 - name: mobile-claims-jobs-recon
@@ -68,7 +68,7 @@ resources:
     recon_config:
       projectId: A2E
       repoPath: SoleraNA/mobile-claim-jobs
-      url: https://recon.apps-prod.gp2.axadmin.net/api/recommendation
+      url: https://recon.apps-prod.usdc10.axadmin.net/api/recommendation
     time_config:
       location: America/Chicago
       start: 03:30 AM
@@ -100,7 +100,7 @@ jobs:
         $BUILD_PIPELINE_NAME prod-Green Deploy Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - aggregate:
     - get: utility-image
@@ -150,7 +150,7 @@ jobs:
         $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - aggregate:
     - get: utility-image
@@ -171,7 +171,7 @@ jobs:
         - |
           cfpass=$(printenv cf_deploy_password)
           cfuser=$(printenv cf_deploy_user)
-          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.usdc10.axadmin.net -o $cf_organization -s $cf_space
           set -x
 
           app_url=$(cf app $cf_app_name-green | grep routes | sed -e 's/routes:\s*/https:\/\//')
@@ -190,7 +190,7 @@ jobs:
         $BUILD_PIPELINE_NAME Prod deployed successfully - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME successful.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   on_failure:
     put: teams-alert
     params:
@@ -198,7 +198,7 @@ jobs:
         $BUILD_PIPELINE_NAME Prod Blue-To-Green Switch Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - get: utility-image
     version: latest
@@ -224,7 +224,7 @@ jobs:
           cfpass=$(printenv cf_deploy_password)
           cfuser=$(printenv cf_deploy_user)
 
-          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.usdc10.axadmin.net -o $cf_organization -s $cf_space
           set -x
 
           greenApps=$(cf apps | grep $cf_app_name-green | { grep -v grep || true; })
@@ -234,14 +234,14 @@ jobs:
           cf unbind-service $cf_app_name dgc-mq
           cf bind-service $cf_app_name-green dgc-mq
 
-          cf map-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name
-          cf unmap-route $cf_app_name apps-$cf_env.gp2.axadmin.net -n $cf_app_name
-          cf unmap-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name-green
+          cf map-route $cf_app_name-green apps-$cf_env.usdc10.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name apps-$cf_env.usdc10.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name-green apps-$cf_env.usdc10.axadmin.net -n $cf_app_name-green
 
           cf stop $cf_app_name
           cf delete $cf_app_name -f
           # Remove the Green-Temp-Route.
-          cf delete-route apps-$cf_env.gp2.axadmin.net --hostname $cf_app_name-green -f
+          cf delete-route apps-$cf_env.usdc10.axadmin.net --hostname $cf_app_name-green -f
 
           # Rename Green app to Blue app.
           cf rename $cf_app_name-green $cf_app_name
