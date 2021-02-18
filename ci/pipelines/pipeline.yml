@@ -16,7 +16,7 @@ source: &dev-source
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
-  newrelic_app_lic: ''
+  newrelic_app_lic: ((newrelic-license-key))
 
 source: &pcpm-source
   cf_deploy_user: ((cf-preprd-username))
@@ -35,7 +35,7 @@ source: &pcpm-source
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
-  newrelic_app_lic: ''
+  newrelic_app_lic: ((newrelic-license-key))
   hours_to_wait_before_update: '1'
   job_run_frequency: '60'
   mbe_db_name: 'mbe'
@@ -60,15 +60,15 @@ resource_types:
 - name: project-metrics
   type: docker-image
   source:
-    repository: ((proget-url))/gdc/concourse-projectmetrics-resource-net21
-    username: ((proget-user))
-    password: ((proget-password))
+    repository: ((internal-docker-addr))/gdc/concourse-projectmetrics-resource-net21
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
     tag: latest
 
 - name: cf-resource
   type: docker-image
   source:
-    repository: ((proget-url))/gdc/cf-resource
+    repository: ((proget-url))/docker/gdc/cf-resource
     username: ((proget-user))
     password: ((proget-password))
     tag: latest
@@ -113,7 +113,7 @@ resources:
 - name: dotnet-image
   type: docker-image
   source:
-    repository: ((proget-url))/gdc/mobile-dotnet-image
+    repository: ((proget-url))/docker/rms/claimsmanagement/dgclaims/mobile-claim-jobs/mobile-dotnet2.2
     username: ((proget-user))
     password: ((proget-password))
     tag: "latest"
@@ -121,7 +121,7 @@ resources:
 - name: utility-image
   type: docker-image
   source:
-    repository: ((proget-url))/gdc/mobile-utility-image
+    repository: ((proget-url))/docker/rms/claimsmanagement/dgclaims/mobile-claim-jobs/mobile-utility
     username: ((proget-user))
     password: ((proget-password))
     tag: "latest"
