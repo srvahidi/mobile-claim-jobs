@@ -23,7 +23,7 @@ source: &pcpm-source
   cf_deploy_password: ((cf-preprd-password))
   artifactory-username: ((artifactory-username))
   artifactory-password: ((artifactory-password))
-  cf_app_name: mobile-claim-pcpm-jobs
+  cf_app_name: mobile-claim-jobs-pcpm
   file_prefix: 'mobile-jobs'
   cf_space: 'pcpm'
   cf_env: 'dev'  
