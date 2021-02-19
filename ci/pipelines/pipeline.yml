@@ -162,8 +162,8 @@ resources:
 - name: pcpm-schedule-for-deployment
   type: time
   source:
-    start: 3:00 AM
-    stop: 4:00 AM
+    start: 12:50 PM
+    stop: 1:50 PM
     location: America/Chicago
 
 jobs:

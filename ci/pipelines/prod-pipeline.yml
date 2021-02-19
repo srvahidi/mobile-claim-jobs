@@ -21,18 +21,16 @@ source: &prod-source
 
 resource_types:
 
+- name: artifactory
+  type: docker-image
+  source:
+    repository: pivotalservices/artifactory-resource
+
 - name: teams-notification
   type: docker-image
   source:
     repository: navicore/teams-notification-resource
     tag: latest
-
-- name: recon
-  type: docker-image
-  source:
-    username: ((proget-user))
-    password: ((proget-password))
-    repository: ((proget-url))/docker/gdc/recon_resource
 
 - name: cf2
   type: docker-image
@@ -51,28 +49,15 @@ resources:
     password: ((proget-password))
     tag: "latest"
 
-- name: mobile-claims-jobs-recon
-  type: recon
+- name: mobile-claims-jobs-artifact
+  type: artifactory
   source:
-    artifactory_config:
-      endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
-      repository: /mobile-backend/mobile-claims-jobs
-      regex: "mobile-jobs-(?<version>.*).zip"
-      username: ((artifactory-username))
-      password: ((artifactory-password))
-      skip_ssl_verification: true
-    git_config:
-      branch: master
-      private_key: ((private-repo-key))
-      uri: git@bitbucket.org:SoleraNA/mobile-claim-jobs.git
-    recon_config:
-      projectId: A2E
-      repoPath: SoleraNA/mobile-claim-jobs
-      url: https://recon.apps-prod.usdc10.axadmin.net/api/recommendation
-    time_config:
-      location: America/Chicago
-      start: 03:30 AM
-      stop: 04:30 AM
+    endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
+    repository: /mobile-backend/mobile-claims-jobs
+    regex: "mobile-jobs-(?<version>.*).zip"
+    username: ((artifactory-username))
+    password: ((artifactory-password))
+    skip_ssl_verification: true
 
 - name: cf2-prod
   type: cf2
@@ -104,7 +89,7 @@ jobs:
   plan:
   - aggregate:
     - get: utility-image
-    - get: mbe-wrapper-recon
+    - get: mbe-wrapper-artifact
       trigger: true
   - task: prepare-manifest
     image: utility-image
@@ -113,7 +98,7 @@ jobs:
     config:
       platform: linux
       inputs:
-      - name: mbe-wrapper-recon
+      - name: mbe-wrapper-artifact
       outputs:
       - name: deployables
       run:
@@ -122,7 +107,7 @@ jobs:
         - -exc
         - |
           output_directory=${PWD}/deployables
-          unzip ${PWD}/mbe-wrapper-recon/mbe-wrapper-*.zip -d ${output_directory}
+          unzip ${PWD}/mbe-wrapper-artifact/mbe-wrapper-*.zip -d ${output_directory}
           manifest_file=${output_directory}/manifest.yml
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
