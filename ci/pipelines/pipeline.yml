@@ -57,14 +57,6 @@ resource_types:
     repository: navicore/teams-notification-resource
     tag: latest
 
-- name: project-metrics
-  type: docker-image
-  source:
-    repository: ((internal-docker-addr))/gdc/concourse-projectmetrics-resource-net21
-    username: ((internal-docker-user))
-    password: ((internal-docker-pass))
-    tag: latest
-
 - name: cf-resource
   type: docker-image
   source:
@@ -150,14 +142,6 @@ resources:
   type: teams-notification
   source:
     url: ((teams-webhook-url))
-
-- name: project-metrics
-  type: project-metrics
-  source:
-    jiraboard: Digital Garage
-    apiurl: https://projectmetrics-api-qa.apps-dev.gp2.axadmin.net
-    sonartoken: ((sonar-auth-token))
-    tribelead: Christopher Klingler
 
 - name: pcpm-schedule-for-deployment
   type: time
@@ -295,12 +279,6 @@ jobs:
       project-name: MobileClaimJobs
       sonar-auth-token: ((sonar-auth-token))
       sonar-url: ((sonar-url))
-  ensure:
-     put: project-metrics
-     params:
-       sourcedir: git-repo
-       outputdir: analysis-output
-       projectname: MobileClaimJobs
 
 - name: deploy-green-dev
   on_failure:
