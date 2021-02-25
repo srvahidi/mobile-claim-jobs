@@ -12,6 +12,7 @@ source: &prod-source
   memory: 1G
   cf_api: https://api.system-prod.usdc10.axadmin.net
   aspnetcore_environment: Production
+  mbe_wrapper_url: https://mbe-wrapper-api-prod.apps-prod.usdc10.axadmin.net/
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
@@ -122,6 +123,8 @@ jobs:
           sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
           sed -i -e "s/\[validate_token_after\]/${validate_token_after}/" ${manifest_file}
           sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
+          sed -i -e "s/\[mbe_wrapper_url\]/${mbe_wrapper_url}/" ${manifest_file}
+          
   - put: cf2-prod
     params:
       manifest: deployables/manifest.yml

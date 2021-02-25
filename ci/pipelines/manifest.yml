@@ -14,5 +14,5 @@ applications:
     MBE_DB_NAME: 'mbe'
     MBE_DB_URL: 'mongodb://mbeuser:password@devmongodb.axusprvt.net:27017/?authSource=mbe'
     MBE_WRAPPER_API_KEY: 'byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH'
-    MBE_WRAPPER_URL: 'https://kong-dev.gp2.axadmin.net/mbe-wrapper-dev/'
+    MBE_WRAPPER_URL: [mbe_wrapper_url]
     RETRO_DAYS: '10'
