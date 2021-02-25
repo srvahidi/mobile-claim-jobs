@@ -10,22 +10,16 @@ source: &prod-source
   cf_env: 'prod'
   instance_number: 2
   memory: 1G
-  cf_api: https://api.system-prod.usdc10.axadmin.net
+  cf_api: https://api.system-prod.gp2.axadmin.net
   aspnetcore_environment: Production
-  mbe_wrapper_url: https://mbe-wrapper-api-prod.apps-prod.usdc10.axadmin.net/
   posturi: '/webhook/5503d5d2-5a64-4608-846e-5de063f64b83@c45b48f3-13bb-448b-9356-ba7b863c2189/IncomingWebhook/5317a69812e848d19d263cf5d896f4db/06a1cc28-4450-4b59-82b4-e061ac65ba35'
   cf_organization: mobile_backend
   teams_url: ((teams-webhook-url))
-  newrelic_app_lic: ((newrelic-license-key))
+  newrelic_app_lic: ((new-relic-license-key))
   buildpack_one: '- newrelic_dotnet_core_buildpack_latest'
   buildpack_two: '- dotnet_core_buildpack'
 
 resource_types:
-
-- name: artifactory
-  type: docker-image
-  source:
-    repository: pivotalservices/artifactory-resource
 
 - name: teams-notification
   type: docker-image
@@ -33,32 +27,52 @@ resource_types:
     repository: navicore/teams-notification-resource
     tag: latest
 
+- name: recon
+  type: docker-image
+  source:
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    repository: ((internal-docker-addr))/gdc/recon_resource
+
 - name: cf2
   type: docker-image
   source:
-    username: ((proget-user))
-    password: ((proget-password))
-    repository: ((proget-url))/docker/gdc/cf-resource
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
+    repository: ((internal-docker-addr))/gdc/cf-resource
 
 resources:    
 
 - name: utility-image
   type: docker-image
   source:
-    repository: ((proget-url))/docker/rms/claimsmanagement/dgclaims/mobile-claim-jobs/mobile-utility
-    username: ((proget-user))
-    password: ((proget-password))
+    repository: ((internal-docker-addr))/gdc/mobile-jobs-utility-image
+    username: ((internal-docker-user))
+    password: ((internal-docker-pass))
     tag: "latest"
 
-- name: mobile-claims-jobs-artifact
-  type: artifactory
+- name: mobile-claims-jobs-recon
+  type: recon
   source:
-    endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
-    repository: /mobile-backend/mobile-jobs
-    regex: "mobile-claim-jobs-(?<version>.*).zip"
-    username: ((artifactory-username))
-    password: ((artifactory-password))
-    skip_ssl_verification: true
+    artifactory_config:
+      endpoint: https://na-artifact-01.na.audatex.com:8443/artifactory
+      repository: /mobile-backend/mobile-claims-jobs
+      regex: "mobile-jobs-(?<version>.*).zip"
+      username: ((artifactory-username))
+      password: ((artifactory-password))
+      skip_ssl_verification: true
+    git_config:
+      branch: master
+      private_key: ((private-repo-key))
+      uri: git@bitbucket.org:SoleraNA/mobile-claim-jobs.git
+    recon_config:
+      projectId: A2E
+      repoPath: SoleraNA/mobile-claim-jobs
+      url: https://recon.apps-prod.gp2.axadmin.net/api/recommendation
+    time_config:
+      location: America/Chicago
+      start: 03:30 AM
+      stop: 04:30 AM
 
 - name: cf2-prod
   type: cf2
@@ -86,11 +100,11 @@ jobs:
         $BUILD_PIPELINE_NAME prod-Green Deploy Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - aggregate:
     - get: utility-image
-    - get: mobile-claims-jobs-artifact
+    - get: mbe-wrapper-recon
       trigger: true
   - task: prepare-manifest
     image: utility-image
@@ -99,7 +113,7 @@ jobs:
     config:
       platform: linux
       inputs:
-      - name: mobile-claims-jobs-artifact
+      - name: mbe-wrapper-recon
       outputs:
       - name: deployables
       run:
@@ -107,8 +121,8 @@ jobs:
         args:
         - -exc
         - |
-          output_directory=./deployables
-          unzip ./mobile-claims-jobs-artifact/mobile-claim-jobs-*.zip -d ${output_directory}
+          output_directory=${PWD}/deployables
+          unzip ${PWD}/mbe-wrapper-recon/mbe-wrapper-*.zip -d ${output_directory}
           manifest_file=${output_directory}/manifest.yml
           sed -i -e "s/\[application_name\]/${cf_app_name}-green/" ${manifest_file}
           sed -i -e "s/\[instances\]/${instance_number}/" ${manifest_file}
@@ -123,8 +137,6 @@ jobs:
           sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
           sed -i -e "s/\[validate_token_after\]/${validate_token_after}/" ${manifest_file}
           sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
-          sed -i -e "s/\[mbe_wrapper_url\]/${mbe_wrapper_url}/" ${manifest_file}
-          
   - put: cf2-prod
     params:
       manifest: deployables/manifest.yml
@@ -138,7 +150,7 @@ jobs:
         $BUILD_PIPELINE_NAME - $BUILD_JOB_NAME Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - aggregate:
     - get: utility-image
@@ -159,12 +171,12 @@ jobs:
         - |
           cfpass=$(printenv cf_deploy_password)
           cfuser=$(printenv cf_deploy_user)
-          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.usdc10.axadmin.net -o $cf_organization -s $cf_space
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
           set -x
 
           app_url=$(cf app $cf_app_name-green | grep routes | sed -e 's/routes:\s*/https:\/\//')
 
-          healthcheck_status=$(curl -s -o /dev/null -w "%{http_code}" ${app_url}/api/mobilejobshealthcheck)
+          healthcheck_status=$(curl -s -o /dev/null -w "%{http_code}" ${app_url}/api/mbewrapperhealthcheck)
           if [ "$healthcheck_status" != "200" ]; then
             echo "App healthcheck did not respond with OK as expected"
             exit 1
@@ -178,7 +190,7 @@ jobs:
         $BUILD_PIPELINE_NAME Prod deployed successfully - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME successful.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   on_failure:
     put: teams-alert
     params:
@@ -186,7 +198,7 @@ jobs:
         $BUILD_PIPELINE_NAME Prod Blue-To-Green Switch Failed - Branch: ((branch-name))
       text: Job $BUILD_JOB_NAME failed.
       actionName: View Job $BUILD_JOB_NAME Results
-      actionTarget: https://concourse-prod.usdc10.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      actionTarget: https://concourse-prod.gp2.axadmin.net/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
   plan:
   - get: utility-image
     version: latest
@@ -212,7 +224,7 @@ jobs:
           cfpass=$(printenv cf_deploy_password)
           cfuser=$(printenv cf_deploy_user)
 
-          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.usdc10.axadmin.net -o $cf_organization -s $cf_space
+          cf login -u $cfuser -p $cfpass -a https://api.system-$cf_env.gp2.axadmin.net -o $cf_organization -s $cf_space
           set -x
 
           greenApps=$(cf apps | grep $cf_app_name-green | { grep -v grep || true; })
@@ -222,14 +234,14 @@ jobs:
           cf unbind-service $cf_app_name dgc-mq
           cf bind-service $cf_app_name-green dgc-mq
 
-          cf map-route $cf_app_name-green apps-$cf_env.usdc10.axadmin.net -n $cf_app_name
-          cf unmap-route $cf_app_name apps-$cf_env.usdc10.axadmin.net -n $cf_app_name
-          cf unmap-route $cf_app_name-green apps-$cf_env.usdc10.axadmin.net -n $cf_app_name-green
+          cf map-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name apps-$cf_env.gp2.axadmin.net -n $cf_app_name
+          cf unmap-route $cf_app_name-green apps-$cf_env.gp2.axadmin.net -n $cf_app_name-green
 
           cf stop $cf_app_name
           cf delete $cf_app_name -f
           # Remove the Green-Temp-Route.
-          cf delete-route apps-$cf_env.usdc10.axadmin.net --hostname $cf_app_name-green -f
+          cf delete-route apps-$cf_env.gp2.axadmin.net --hostname $cf_app_name-green -f
 
           # Rename Green app to Blue app.
           cf rename $cf_app_name-green $cf_app_name
