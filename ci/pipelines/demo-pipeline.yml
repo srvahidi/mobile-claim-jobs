@@ -115,7 +115,7 @@ jobs:
           sed -i -e "s~\[posturi\]~${posturi}~" ${manifest_file}
           sed -i -e "s/\[validate_token_after\]/${validate_token_after}/" ${manifest_file}
           sed -i -e "s/\[aspnetcore_environment\]/${aspnetcore_environment}/" ${manifest_file}
-          sed -i -e "s/\[mbe_wrapper_url\]/${mbe_wrapper_url}/" ${manifest_file}
+          sed -i -e "s~\[mbe_wrapper_url\]~${mbe_wrapper_url}~" ${manifest_file}
   - put: cf2-demo
     params:
       manifest: deployables/manifest.yml
