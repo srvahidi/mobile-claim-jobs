@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    service: mobile-claim-jobs-demo
+  name: mobile-claim-jobs-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      service: mobile-claim-jobs-demo
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        network/default: "true"
+        service: mobile-claim-jobs-demo
+        solera-vertical: rms
+        solera-env: cae
+        solera-org: mbe
+        solera-ingress: enabled               
+    spec:
+      containers:
+        - env:
+            - name: NEW_RELIC_APP_NAME
+              value: mobile-claim-jobs-demo
+            - name: NEW_RELIC_LABELS
+              value: Environment:CAE;Vertical:RMS Solutions;Theme:Insurance PL Claims;Product:Estimating
+            - name: NEW_RELIC_LICENSE_KEY
+              value: e575f6ebb7f8821308cbea10b3817a8bcbe0NRAL
+            - name: CORECLR_ENABLE_PROFILING
+              value: "1"
+            - name: CORECLR_NEWRELIC_HOME
+              value: /deployables/newrelic-netcore20-agent
+            - name: CORECLR_PROFILER_PATH
+              value: /deployables/newrelic-netcore20-agent/libNewRelicProfiler.so
+            - name: CORECLR_PROFILER
+              value: "{36032161-FFC0-4B61-B559-F6C5D41BAE5A}"                            
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "CAE"
+            - name: HOURS_TO_WAIT_BEFORE_UPDATE
+              value: "1"
+            - name: JOB_RUN_FREQUENCY
+              value: "60"
+            - name: MBE_DB_NAME
+              value: "mbe"
+            - name: MBE_DB_URL
+              value: "mongodb://mbeuser:GanGam012@dm-mondb-pri.axusprvt.net:27017/?authSource=mbe"
+            - name: MBE_WRAPPER_API_KEY
+              value: "byvOAqRAKpMsLTbfp3MkBpUzhy5iZ4AH"
+            - name: MBE_WRAPPER_URL
+              value: "https://mbe-wrapper-api-demo.tkg-rms-cae.usdc01.solera.farm/"
+            - name: RETRO_DAYS
+              value: "10"           
+            - name: NUMBER_OF_RECORDS_TO_FETCH
+              value: "2"                         
+          image: feeds.axadmin.net/docker/rms/mbe/mobile-claim-jobs:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            successThreshold: 1
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 10
+          name: mobile-claim-jobs-demo
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              ephemeral-storage: "1000000000"
+              memory: 512000Ki
+      restartPolicy: Always
+      serviceAccountName: default
+status: {}
