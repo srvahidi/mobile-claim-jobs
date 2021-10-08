@@ -47,7 +47,7 @@ spec:
             - name: HOURS_TO_WAIT_BEFORE_UPDATE
               value: "2"
             - name: JOB_RUN_FREQUENCY
-              value: "60"
+              value: "600"
             - name: MBE_DB_NAME
               value: "mbe"
             - name: MBE_DB_URL
@@ -55,12 +55,12 @@ spec:
             - name: MBE_WRAPPER_API_KEY
               value: "Pn733C9nmCHt8Z0Gggx8XcbO0v60A50K"
             - name: MBE_WRAPPER_URL
-              value: "https://mbe-wrapper-api-prod.tkg-rms-prd.usdc01.solera.farm/"
+              value: "https://mbe-wrapper-api-prod.tkg-rms-prod.usdc01.solera.farm/"
             - name: RETRO_DAYS
               value: "1"           
             - name: NUMBER_OF_RECORDS_TO_FETCH
               value: "1"                         
-          image: feeds.axadmin.net/docker/rms/mbe/mobile-claim-jobs:latest
+          image: feeds.axadmin.net/docker/rms/mbe/mobile-claim-jobs:1.0-49-g2427a60
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
@@ -76,7 +76,7 @@ spec:
           resources:
             limits:
               ephemeral-storage: "1000000000"
-              memory: 500000Ki
+              memory: 1000000Ki
       restartPolicy: Always
       serviceAccountName: default
 status: {}
