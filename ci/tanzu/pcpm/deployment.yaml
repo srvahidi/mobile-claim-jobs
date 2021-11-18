@@ -58,7 +58,7 @@ spec:
               value: "https://mbe-wrapper-pcpm.tkg-rms-qae.usdc01.solera.farm/"
             - name: RETRO_DAYS
               value: "10"           
-          image: feeds.axadmin.net/docker/rms/mbe/mobile-claim-jobs:latest
+          image: feeds.axadmin.net/docker/rms/mbe/mobile-claim-jobs:VERSION
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
