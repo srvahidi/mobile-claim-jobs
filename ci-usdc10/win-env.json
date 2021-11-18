@@ -1,0 +1,20 @@
+{
+      "user-provided": [
+        {
+          "label": "user-provided",
+          "name": "claims-job-config",
+          "tags": [],
+          "instance_name": "claims-job-config",
+          "binding_name": null,
+          "credentials": {
+            "RETRO_DAYS": "10",
+			"HOURS_TO_WAIT_BEFORE_UPDATE":"7",
+			"MBE_DB_NAME":"mbe",
+			"MBE_DB_URL" : "mongodb://mbeuser:password@10.66.49.126:27017/?authSource=mbe",
+			"JOB_RUN_FREQUENCY" : "60"
+          },
+          "syslog_drain_url": "",
+          "volume_mounts": []
+        }
+      ]
+}
