@@ -78,7 +78,7 @@ spec:
                memory: 150Mi
                cpu: 5m
              limits:
-               memory: 175Mi
+               memory: 225Mi
                cpu: 250m
       restartPolicy: Always
       serviceAccountName: default
